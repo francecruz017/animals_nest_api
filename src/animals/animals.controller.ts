@@ -7,7 +7,13 @@ import {
   Param,
   Body,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
+import {
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from '@nestjs/cache-manager'
 import { AuthGuard } from '@nestjs/passport'
 import { AnimalsService } from './animals.service'
 
@@ -16,11 +22,16 @@ import { AnimalsService } from './animals.service'
 export class AnimalsController {
   constructor(private animals: AnimalsService) {}
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('animals_all')
+  @CacheTTL(60)
   @Get()
   getAll() {
     return this.animals.findAll()
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60)
   @Get(':id')
   getOne(@Param('id') id: number) {
     return this.animals.findOne(Number(id))

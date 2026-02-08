@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { CacheModule } from '@nestjs/cache-manager'
 import { AuthModule } from './auth/auth.module'
 import { AnimalsModule } from './animals/animals.module'
 
@@ -8,6 +9,11 @@ import { AnimalsModule } from './animals/animals.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60,
     }),
 
     TypeOrmModule.forRootAsync({

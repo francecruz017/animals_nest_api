@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import type { Cache } from 'cache-manager'
 import { Animal } from './animal.entity'
 
 @Injectable()
@@ -8,25 +10,35 @@ export class AnimalsService {
   constructor(
     @InjectRepository(Animal)
     private animals: Repository<Animal>,
+    @Inject(CACHE_MANAGER)
+    private cache: Cache,
   ) {}
 
-  findAll() {
+  async findAll() {
     return this.animals.find()
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return this.animals.findOneBy({ id })
   }
 
-  create(data: Partial<Animal>) {
-    return this.animals.insert(data)
+  async create(data: Partial<Animal>) {
+    const result = await this.animals.insert(data)
+    await this.cache.del('animals_all')
+    return result
   }
 
-  update(id: number, data: Partial<Animal>) {
-    return this.animals.update(id, data)
+  async update(id: number, data: Partial<Animal>) {
+    const result = await this.animals.update(id, data)
+    await this.cache.del('animals_all')
+    await this.cache.del(`animals_${id}`)
+    return result
   }
 
-  remove(id: number) {
-    return this.animals.delete(id)
+  async remove(id: number) {
+    const result = await this.animals.delete(id)
+    await this.cache.del('animals_all')
+    await this.cache.del(`animals_${id}`)
+    return result
   }
 }

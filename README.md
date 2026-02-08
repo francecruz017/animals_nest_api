@@ -1,14 +1,21 @@
-# NestJS Animals API 🐾
+# NestJS Animals API
 
-A simple REST API built with **NestJS**, **MySQL**, **TypeORM**, and **JWT authentication**.
+A REST API built with **NestJS**, **MySQL**, **TypeORM**, **JWT authentication**, and **caching**.
+
+This project demonstrates a clean, production-style NestJS architecture with environment-based configuration and cached read operations.
+
+---
 
 ## Features
 
 - User authentication (register & login)
 - JWT-protected routes
 - CRUD operations for Animals
-- MySQL database
-- Clean service / controller architecture
+- MySQL database with TypeORM
+- Environment-based configuration (`.env`)
+- In-memory caching for read endpoints
+- Cache invalidation on write operations
+- Clean controller / service / module separation
 
 ---
 
@@ -20,6 +27,8 @@ A simple REST API built with **NestJS**, **MySQL**, **TypeORM**, and **JWT authe
 - TypeORM
 - Passport JWT
 - bcrypt
+- @nestjs/config
+- @nestjs/cache-manager
 
 ---
 
@@ -46,6 +55,27 @@ src/
 
 ---
 
+## Environment Configuration
+
+Create a `.env` file at the project root:
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=nest_animals
+
+# JWT
+JWT_SECRET=supersecretchangeit
+JWT_EXPIRES_IN=1d
+```
+
+⚠️ Do **NOT** commit `.env` to version control.
+
+---
+
 ## Database Setup
 
 Create the database manually:
@@ -53,8 +83,6 @@ Create the database manually:
 ```sql
 CREATE DATABASE nest_animals;
 ```
-
-Update your MySQL credentials in `app.module.ts` if needed.
 
 ---
 
@@ -68,7 +96,14 @@ POST /auth/register
 ```json
 {
   "email": "test@test.com",
-  "password": "123456"
+  "password": "test@123"
+}
+```
+
+Response:
+```json
+{
+  "message": "User registered successfully"
 }
 ```
 
@@ -77,14 +112,14 @@ POST /auth/register
 POST /auth/login
 ```
 
-Returns:
+Response:
 ```json
 {
   "access_token": "JWT_TOKEN_HERE"
 }
 ```
 
-Use this token for protected routes:
+Use the token for protected routes:
 
 ```
 Authorization: Bearer <JWT_TOKEN>
@@ -92,7 +127,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-## Animals API (Protected)
+## Animals API (JWT Protected)
 
 ### Create Animal
 ```
@@ -107,12 +142,12 @@ POST /animals
 }
 ```
 
-### Get All Animals
+### Get All Animals (Cached)
 ```
 GET /animals
 ```
 
-### Get One Animal
+### Get One Animal (Cached)
 ```
 GET /animals/:id
 ```
@@ -135,27 +170,42 @@ DELETE /animals/:id
 
 ---
 
+## Caching
+
+- Uses NestJS CacheModule (in-memory)
+- GET endpoints are cached
+- Cache TTL: 60 seconds
+- Cache is invalidated automatically on create, update, and delete
+- Cache logic lives in services, not controllers
+
+---
+
 ## Installation & Project Setup
 
-### 1. Install NestJS CLI
+### 1. Install Node.js
+Recommended:
+- Node.js v20+
+
+### 2. Install NestJS CLI
 ```bash
 npm install -g @nestjs/cli
 ```
 
-### 2. Create Project
+### 3. Create Project
 ```bash
 nest new nest_api_sample
 cd nest_api_sample
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 ```bash
 npm install @nestjs/typeorm typeorm mysql2
 npm install @nestjs/jwt passport passport-jwt @nestjs/passport bcrypt
-npm install class-validator class-transformer
+npm install @nestjs/config
+npm install @nestjs/cache-manager cache-manager
 ```
 
-### 4. Run the Server
+### 5. Run the Server
 ```bash
 npm run start:dev
 ```
